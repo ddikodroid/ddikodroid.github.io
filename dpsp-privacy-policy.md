@@ -1,8 +1,6 @@
----
 layout: page
 title:  "DPSP Privacy Policy"
 permalink: /dpsp-privacy-policy/
----
 
 **Privacy Policy**
 
