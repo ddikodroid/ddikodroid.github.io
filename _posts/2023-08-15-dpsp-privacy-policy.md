@@ -1,3 +1,8 @@
+---
+layout: post
+title:  "DPSP Privacy Policy"
+---
+
 **Privacy Policy**
 
 JKT Developer built the Kalkulator Keuangan DPSP app as a Free app. This SERVICE is provided by JKT Developer at no cost and is intended for use as is.
