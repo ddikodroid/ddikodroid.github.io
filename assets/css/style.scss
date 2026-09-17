@@ -1,0 +1,10 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+header h1,
+header h2 {
+  width: auto;
+  max-width: 100%;
+}
