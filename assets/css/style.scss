@@ -13,9 +13,44 @@ header h2 {
 body {
   font-family: 'Montserrat', 'Helvetica Neue', Helvetica, Arial, serif;
   font-weight: 300;
+  font-size: 18.75px; // 125% of the theme's 15px base
 }
 
 #main-content h1,
 #main-content h2 {
   font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
+}
+
+// Scale the layout to 125% of the theme's defaults, to match the larger text
+.inner {
+  width: 1175px; // 940px * 1.25
+}
+
+#main-content {
+  width: 863px; // 690px * 1.25
+}
+
+aside#sidebar {
+  width: 250px; // 200px * 1.25
+}
+
+header h1 {
+  font-size: 90px; // 72px * 1.25
+}
+
+header h2 {
+  font-size: 32.5px; // 26px * 1.25
+}
+
+#main-content h2 {
+  font-size: 27.5px; // 22px * 1.25
+}
+
+#main-content h3 {
+  font-size: 22.5px; // 18px * 1.25
+}
+
+#main-content h4,
+#main-content h5 {
+  font-size: 18.75px; // 15px * 1.25
 }
