@@ -5,7 +5,7 @@ title: Home
 
 # Hi, I'm Diko 👋
 
-This is my little corner of the internet. Right now it's home to my
-**[Bentang Jawa 2026](/bentang-jawa-2026/)** journal.
+Here's my post(s) so far. Mostly notes on technology, programming, and
+software development, plus whatever I'm into outside of work.
 
 - 📓 [Bentang Jawa 2026](/bentang-jawa-2026/)
