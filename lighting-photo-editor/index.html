@@ -2137,8 +2137,30 @@
         );
 
         try {
-          const imagePayload = await prepareImagePayloadForGemini(state.originalFullRes);
-          const aiResult = await runGeminiLightingEdit(imagePayload, promptText);
+          const useGemini = !!(window.__getGeminiKey && window.__getGeminiKey());
+          let aiResult;
+          if (useGemini) {
+            const imagePayload = await prepareImagePayloadForGemini(state.originalFullRes);
+            try {
+              aiResult = await runGeminiLightingEdit(imagePayload, promptText);
+            } catch (gemErr) {
+              if (gemErr) gemErr.fromGemini = true;
+              throw gemErr;
+            }
+          } else {
+            if (!window.LocalRelight) throw new Error('On-device relighting engine failed to load. Check your connection and reload.');
+            const blobRef = state.originalFullRes.blob;
+            const setStatus = (msg) => {
+              if (state.loaderStepTimer) { clearInterval(state.loaderStepTimer); state.loaderStepTimer = null; }
+              dom.loaderSubtitle.textContent = msg;
+            };
+            aiResult = await window.LocalRelight.run(
+              { drawableSource: () => decodeBlobOrientationCorrected(blobRef) },
+              preset,
+              state.adjustments,
+              setStatus
+            );
+          }
 
           if (state.editedFullRes && state.editedFullRes.objectUrl) {
             URL.revokeObjectURL(state.editedFullRes.objectUrl);
@@ -2168,14 +2190,14 @@
           showBanner(
             'success',
             `${preset.name} applied`,
-            `AI output received (${aiResult.width} × ${aiResult.height}). Tap Expand for fullscreen zoom.`
+            `${useGemini ? 'Gemini' : 'On-device AI'} output ready (${aiResult.width} × ${aiResult.height}). Tap Expand for fullscreen zoom.`
           );
         } catch (err) {
           const needsCanvasFeature =
-            !err ||
+            !!(err && err.fromGemini) && (
             err.isNativeUnavailable ||
             err.name === 'TypeError' ||
-            /api key|permission|unauthenticated|forbidden|not found|failed to fetch/i.test(err.message || '');
+            /api key|permission|unauthenticated|forbidden|not found|failed to fetch/i.test(err.message || ''));
 
           if (needsCanvasFeature) {
             showBanner(
@@ -4216,12 +4238,14 @@
   </script>
 
 
+<script src="relight.js"></script>
+<style>@media (max-width: 760px){#gk-btn{top:auto!important;bottom:12px}}</style>
 <!-- Standalone API key settings (added for GitHub Pages deployment) -->
-<button id="gk-btn" type="button" title="Set Gemini API key" style="position:fixed;top:12px;right:12px;z-index:9999;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(20,20,24,.85);color:#eee;font:500 12px Outfit,system-ui,sans-serif;cursor:pointer;backdrop-filter:blur(8px)">🔑 API key</button>
+<button id="gk-btn" type="button" title="Optional: use Google Gemini instead of on-device relighting" style="position:fixed;top:12px;right:12px;z-index:9999;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(20,20,24,.85);color:#eee;font:500 12px Outfit,system-ui,sans-serif;cursor:pointer;backdrop-filter:blur(8px)">🔑 Gemini (optional)</button>
 <div id="gk-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);align-items:center;justify-content:center;padding:16px">
   <div style="width:100%;max-width:420px;background:#18181c;color:#eee;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:20px;font:14px Outfit,system-ui,sans-serif">
-    <div style="font-weight:600;font-size:16px;margin-bottom:6px">Gemini API key</div>
-    <p style="margin:0 0 12px;color:#aaa;line-height:1.45">Relighting runs on Google's Gemini image model. Paste your own key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:#f472b6">Google AI Studio</a>. It is stored only in this browser and sent only to Google's API.</p>
+    <div style="font-weight:600;font-size:16px;margin-bottom:6px">Gemini API key (optional)</div>
+    <p style="margin:0 0 12px;color:#aaa;line-height:1.45">No key needed: relighting runs on-device using a depth-estimation AI model (downloaded once, ~25&nbsp;MB). For generative relighting by Google's Gemini image model instead, paste your own key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:#f472b6">Google AI Studio</a>. It is stored only in this browser and sent only to Google's API. Clear it to go back to on-device mode.</p>
     <input id="gk-input" type="password" autocomplete="off" placeholder="AIza…" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0f0f12;color:#eee;font:inherit">
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
       <button id="gk-clear" type="button" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:transparent;color:#ccc;cursor:pointer;font:inherit">Clear</button>
@@ -4236,7 +4260,7 @@
   function get(){ try{ return localStorage.getItem(K)||mem; }catch(e){ return mem; } }
   function set(v){ mem=v; try{ v?localStorage.setItem(K,v):localStorage.removeItem(K); }catch(e){} refresh(); }
   var btn=document.getElementById('gk-btn'), modal=document.getElementById('gk-modal'), input=document.getElementById('gk-input');
-  function refresh(){ btn.textContent = get() ? '🔑 API key ✓' : '🔑 API key'; }
+  function refresh(){ btn.textContent = get() ? '🔑 Gemini mode ✓' : '🔑 Gemini (optional)'; }
   function open(){ input.value=get(); modal.style.display='flex'; setTimeout(function(){input.focus();},0); }
   function close(){ modal.style.display='none'; }
   window.__getGeminiKey=function(){ return (get()||'').trim(); };
